@@ -22,7 +22,7 @@ shellagent() {
     fi
     
     # Pass all arguments to the shell script
-    bash "$script_path" "$@"
+    "$script_path" "$@"
 }
 
 # Interactive mode: type 'sa!' to open an interactive prompt
