@@ -12,6 +12,7 @@ alias sa='shellagent'
 # Function to handle comments with special prefix
 # Usage: shellagent "#install python and create a test script"
 # Or: sa "#install python and create a test script"
+# Or: sa (without arguments to enter interactive prompt mode)
 shellagent() {
     local script_path="${SHELLAGENT_DIR}/shellagent.sh"
     
@@ -21,8 +22,20 @@ shellagent() {
         return 1
     fi
     
-    # Pass all arguments to the shell script
-    "$script_path" "$@"
+    # If no arguments provided, enter interactive prompt mode
+    if [[ $# -eq 0 ]]; then
+        local description
+        
+        # Display prompt indicator
+        read -r "description?🤖 ShellAgent> "
+        
+        if [[ -n "$description" ]]; then
+            "$script_path" "$description"
+        fi
+    else
+        # Pass all arguments to the shell script
+        "$script_path" "$@"
+    fi
 }
 
 # Interactive mode: type 'sa!' to open an interactive prompt

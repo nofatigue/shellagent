@@ -60,13 +60,22 @@ chmod +x /home/user/code/shellagent/shellagent.sh
 
 ### Basic Usage
 ```bash
-# Simple command generation
+# Simple command generation (with quotes)
 shellagent "install python3 and pip"
 
-# Shorter alias
+# Shorter alias (with quotes)
 sa "create a backup of my home directory"
 
-# Interactive mode
+# Interactive prompt mode (NO quotes needed!)
+sa
+# You'll see: 🤖 ShellAgent> 
+# Then type: install python3 and pip
+
+# Or use shellagent
+shellagent
+# Then type your request without quotes
+
+# Alternative interactive mode
 sa!
 ```
 
