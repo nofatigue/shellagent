@@ -169,7 +169,7 @@ main() {
     echo ""
     
     # Ask for confirmation
-    read -p "Execute these commands? (y/n) " -n 1 confirm
+    read "confirm?Execute these commands? (y/n) "
     echo ""
     [[ "$confirm" != "y" && "$confirm" != "Y" ]] && {
         error "Cancelled by user"
