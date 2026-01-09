@@ -24,29 +24,29 @@ shellagent() {
     
     # If no arguments provided, enter interactive prompt mode
     if [[ $# -eq 0 ]]; then
-        local description
-        
-        # Display prompt indicator
-        read -r "description?🤖 ShellAgent> "
-        
-        if [[ -n "$description" ]]; then
-            "$script_path" "$description"
-        fi
+        _shellagent_read_and_execute
     else
         # Pass all arguments to the shell script
         "$script_path" "$@"
     fi
 }
 
-# Interactive mode: type 'sa!' to open an interactive prompt
-shellagent_interactive() {
+# Helper function to read user input and execute
+_shellagent_read_and_execute() {
+    local script_path="${SHELLAGENT_DIR}/shellagent.sh"
     local description
     
-    read -p "Describe what you want to do: " description
+    # Display prompt indicator
+    read -r "description?🤖 ShellAgent> "
     
     if [[ -n "$description" ]]; then
-        shellagent "$description"
+        "$script_path" "$description"
     fi
+}
+
+# Interactive mode: type 'sa!' to open an interactive prompt
+shellagent_interactive() {
+    _shellagent_read_and_execute
 }
 
 alias 'sa!'='shellagent_interactive'
