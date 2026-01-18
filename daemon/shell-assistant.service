@@ -1,0 +1,23 @@
+[Unit]
+Description=Shell Assistant Daemon
+After=network.target
+
+[Service]
+Type=simple
+User=%i
+ExecStart=/usr/local/bin/shell-assistant-daemon start
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+
+# Environment variables can be set here or in a separate file
+# Environment="SHELLAGENT_API_KEY=your-api-key"
+# Environment="SHELLAGENT_PROVIDER=openai"
+# Environment="SHELLAGENT_MODEL=gpt-4o-mini"
+
+# Or load from file:
+# EnvironmentFile=/etc/shell-assistant/environment
+
+[Install]
+WantedBy=default.target

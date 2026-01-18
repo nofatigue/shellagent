@@ -128,5 +128,141 @@ def test(prompt):
         sys.exit(1)
 
 
+@main.command(name="install-service")
+def install_service():
+    """Install daemon as a system service."""
+    import os
+    import platform
+    import shutil
+    from pathlib import Path
+    
+    system = platform.system()
+    
+    if system == "Linux":
+        # Install systemd service
+        service_file = Path(__file__).parent.parent / "shell-assistant.service"
+        target = Path("/etc/systemd/system/shell-assistant.service")
+        
+        if not service_file.exists():
+            click.echo("❌ Service file not found")
+            sys.exit(1)
+        
+        try:
+            # Check if running as root
+            if os.geteuid() != 0:
+                click.echo("⚠️  This command requires root privileges")
+                click.echo("   Run with: sudo shell-assistant-daemon install-service")
+                sys.exit(1)
+            
+            # Copy service file
+            shutil.copy(service_file, target)
+            click.echo(f"✅ Installed service file to {target}")
+            
+            # Reload systemd
+            os.system("systemctl daemon-reload")
+            click.echo("✅ Reloaded systemd")
+            
+            click.echo("\n📋 Next steps:")
+            click.echo("   1. Enable service: sudo systemctl enable shell-assistant")
+            click.echo("   2. Start service: sudo systemctl start shell-assistant")
+            click.echo("   3. Check status: sudo systemctl status shell-assistant")
+            
+        except Exception as e:
+            click.echo(f"❌ Installation failed: {e}")
+            sys.exit(1)
+    
+    elif system == "Darwin":
+        # Install launchd service
+        plist_file = Path(__file__).parent.parent / "com.shell-assistant.daemon.plist"
+        target = Path.home() / "Library/LaunchAgents/com.shell-assistant.daemon.plist"
+        
+        if not plist_file.exists():
+            click.echo("❌ Plist file not found")
+            sys.exit(1)
+        
+        try:
+            # Create LaunchAgents directory if it doesn't exist
+            target.parent.mkdir(parents=True, exist_ok=True)
+            
+            # Copy plist file
+            shutil.copy(plist_file, target)
+            click.echo(f"✅ Installed plist to {target}")
+            
+            click.echo("\n📋 Next steps:")
+            click.echo("   1. Load service: launchctl load ~/Library/LaunchAgents/com.shell-assistant.daemon.plist")
+            click.echo("   2. Check status: launchctl list | grep shell-assistant")
+            click.echo("   3. View logs: tail -f /tmp/shell-assistant-daemon.log")
+            
+        except Exception as e:
+            click.echo(f"❌ Installation failed: {e}")
+            sys.exit(1)
+    
+    else:
+        click.echo(f"❌ Unsupported platform: {system}")
+        click.echo("   Service installation is only supported on Linux and macOS")
+        sys.exit(1)
+
+
+@main.command(name="uninstall-service")
+def uninstall_service():
+    """Uninstall daemon system service."""
+    import os
+    import platform
+    from pathlib import Path
+    
+    system = platform.system()
+    
+    if system == "Linux":
+        target = Path("/etc/systemd/system/shell-assistant.service")
+        
+        try:
+            # Check if running as root
+            if os.geteuid() != 0:
+                click.echo("⚠️  This command requires root privileges")
+                click.echo("   Run with: sudo shell-assistant-daemon uninstall-service")
+                sys.exit(1)
+            
+            if target.exists():
+                # Stop and disable service
+                os.system("systemctl stop shell-assistant 2>/dev/null")
+                os.system("systemctl disable shell-assistant 2>/dev/null")
+                
+                # Remove service file
+                target.unlink()
+                click.echo(f"✅ Removed service file from {target}")
+                
+                # Reload systemd
+                os.system("systemctl daemon-reload")
+                click.echo("✅ Reloaded systemd")
+            else:
+                click.echo("⚠️  Service file not found")
+            
+        except Exception as e:
+            click.echo(f"❌ Uninstallation failed: {e}")
+            sys.exit(1)
+    
+    elif system == "Darwin":
+        target = Path.home() / "Library/LaunchAgents/com.shell-assistant.daemon.plist"
+        
+        try:
+            if target.exists():
+                # Unload service
+                os.system(f"launchctl unload {target} 2>/dev/null")
+                
+                # Remove plist file
+                target.unlink()
+                click.echo(f"✅ Removed plist from {target}")
+            else:
+                click.echo("⚠️  Plist file not found")
+            
+        except Exception as e:
+            click.echo(f"❌ Uninstallation failed: {e}")
+            sys.exit(1)
+    
+    else:
+        click.echo(f"❌ Unsupported platform: {system}")
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     main()

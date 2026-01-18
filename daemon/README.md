@@ -55,6 +55,58 @@ shell-assistant-daemon status
 shell-assistant-daemon test "show disk usage"
 ```
 
+## System Service Installation
+
+### Linux (systemd)
+
+Install the daemon as a system service:
+
+```bash
+# Install service
+sudo shell-assistant-daemon install-service
+
+# Enable and start
+sudo systemctl enable shell-assistant
+sudo systemctl start shell-assistant
+
+# Check status
+sudo systemctl status shell-assistant
+
+# View logs
+journalctl -u shell-assistant -f
+
+# Uninstall
+sudo shell-assistant-daemon uninstall-service
+```
+
+**Note:** Make sure to set environment variables in the service file or in `/etc/shell-assistant/environment`.
+
+### macOS (launchd)
+
+Install the daemon as a launch agent:
+
+```bash
+# Install service
+shell-assistant-daemon install-service
+
+# Load service
+launchctl load ~/Library/LaunchAgents/com.shell-assistant.daemon.plist
+
+# Check status
+launchctl list | grep shell-assistant
+
+# View logs
+tail -f /tmp/shell-assistant-daemon.log
+
+# Unload service
+launchctl unload ~/Library/LaunchAgents/com.shell-assistant.daemon.plist
+
+# Uninstall
+shell-assistant-daemon uninstall-service
+```
+
+**Note:** Edit `~/Library/LaunchAgents/com.shell-assistant.daemon.plist` to set environment variables before loading.
+
 ## API Endpoints
 
 ### GET /health
@@ -87,9 +139,18 @@ Generate shell command from natural language prompt.
 ```json
 {
   "command": "du -sh * | sort -h",
-  "explanation": "Shows disk usage of all items in current directory, sorted by size"
+  "explanation": "Shows disk usage of all items in current directory, sorted by size",
+  "warning": "⚠️ Warning: Deletes files. Please review before executing.",
+  "severity": "warning"
 }
 ```
+
+**Note:** The `warning` and `severity` fields are only present if the command is potentially dangerous.
+
+Severity levels:
+- `safe` - No warnings
+- `warning` - Caution recommended (e.g., file operations)
+- `dangerous` - High risk (e.g., recursive delete, disk operations)
 
 ## Development
 

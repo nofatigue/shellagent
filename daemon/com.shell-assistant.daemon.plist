@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.shell-assistant.daemon</string>
+    
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/bin/shell-assistant-daemon</string>
+        <string>start</string>
+    </array>
+    
+    <key>RunAtLoad</key>
+    <true/>
+    
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+    
+    <key>StandardOutPath</key>
+    <string>/tmp/shell-assistant-daemon.log</string>
+    
+    <key>StandardErrorPath</key>
+    <string>/tmp/shell-assistant-daemon.error.log</string>
+    
+    <key>EnvironmentVariables</key>
+    <dict>
+        <!-- Set your environment variables here -->
+        <!-- <key>SHELLAGENT_API_KEY</key>
+        <string>your-api-key</string>
+        <key>SHELLAGENT_PROVIDER</key>
+        <string>openai</string>
+        <key>SHELLAGENT_MODEL</key>
+        <string>gpt-4o-mini</string> -->
+    </dict>
+</dict>
+</plist>
