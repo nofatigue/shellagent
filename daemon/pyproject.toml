@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shell-assistant"
+version = "0.1.0"
+description = "LLM-powered shell command assistant daemon"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "httpx>=0.25.0",
+    "pyyaml>=6.0",
+    "click>=8.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+]
+
+[project.scripts]
+shell-assistant-daemon = "shell_assistant.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["shell_assistant*"]
