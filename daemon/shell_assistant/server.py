@@ -108,7 +108,7 @@ class ShellAssistantHandler(BaseHTTPRequestHandler):
             
             # Generate command
             try:
-                result = self.llm_client.get_command(prompt, context if context else None)
+                result = self.llm_client.get_command(prompt, context or None)
                 
                 # Check command safety and add severity/warning fields
                 if "command" in result:

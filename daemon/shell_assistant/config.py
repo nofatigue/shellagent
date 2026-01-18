@@ -31,7 +31,7 @@ class Config:
         config = {
             "openrouter": {
                 "api_key": os.getenv("OPENROUTER_API_KEY", os.getenv("SHELLAGENT_API_KEY", "")),
-                "model": os.getenv("SHELLAGENT_MODEL", "anthropic/claude-3.5-sonnet"),
+                "model": os.getenv("SHELLAGENT_MODEL", "gpt-4o-mini"),
                 "base_url": os.getenv("SHELLAGENT_API_BASE", "https://openrouter.ai/api/v1"),
                 "provider": os.getenv("SHELLAGENT_PROVIDER", "openai"),
             },
