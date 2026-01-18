@@ -1,0 +1,13 @@
+README.md
+pyproject.toml
+shell_assistant/__init__.py
+shell_assistant/cli.py
+shell_assistant/config.py
+shell_assistant/llm_client.py
+shell_assistant/server.py
+shell_assistant.egg-info/PKG-INFO
+shell_assistant.egg-info/SOURCES.txt
+shell_assistant.egg-info/dependency_links.txt
+shell_assistant.egg-info/entry_points.txt
+shell_assistant.egg-info/requires.txt
+shell_assistant.egg-info/top_level.txt
