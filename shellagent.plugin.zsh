@@ -26,16 +26,13 @@ _shellagent_call_daemon() {
     local shell_type="$SHELL"
     local os_type="$(uname)"
     
-    # Build JSON payload with context
-    local json_payload=$(cat <<EOF
-{
-  "prompt": "$prompt",
-  "cwd": "$cwd",
-  "shell": "$shell_type",
-  "os": "$os_type"
-}
-EOF
-)
+    # Build JSON payload with proper escaping using jq
+    local json_payload=$(jq -n \
+        --arg prompt "$prompt" \
+        --arg cwd "$cwd" \
+        --arg shell "$shell_type" \
+        --arg os "$os_type" \
+        '{prompt: $prompt, cwd: $cwd, shell: $shell, os: $os}')
     
     # Call daemon
     local response=$(curl -s -X POST "http://${SHELLAGENT_DAEMON_HOST}:${SHELLAGENT_DAEMON_PORT}/complete" \

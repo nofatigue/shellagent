@@ -110,13 +110,13 @@ class ShellAssistantHandler(BaseHTTPRequestHandler):
             try:
                 result = self.llm_client.get_command(prompt, context if context else None)
                 
-                # Check command safety
+                # Check command safety and add severity/warning fields
                 if "command" in result:
                     severity, descriptions = self.safety_checker.check_command(result["command"])
+                    result["severity"] = severity
                     if severity != "safe":
                         warning_msg = self.safety_checker.get_warning_message(severity, descriptions)
                         result["warning"] = warning_msg
-                        result["severity"] = severity
                 
                 self._send_json_response(200, result)
             except Exception as e:

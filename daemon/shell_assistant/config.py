@@ -2,8 +2,12 @@
 
 import os
 import yaml
+import logging
 from pathlib import Path
 from typing import Dict, Any
+
+
+logger = logging.getLogger(__name__)
 
 
 class Config:
@@ -52,7 +56,7 @@ class Config:
                         # Deep merge file config with defaults
                         self._merge_config(config, file_config)
             except Exception as e:
-                print(f"Warning: Failed to load config from {self.config_path}: {e}")
+                logger.warning(f"Failed to load config from {self.config_path}: {e}")
         
         return config
     

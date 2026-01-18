@@ -68,6 +68,29 @@ class LLMClient:
         
         return base_prompt
     
+    def _parse_llm_response(self, content: str) -> Dict[str, str]:
+        """Parse LLM response, handling both JSON and plain text.
+        
+        Args:
+            content: Raw response content from LLM
+            
+        Returns:
+            Dict with 'command' and 'explanation' keys
+        """
+        # Try to parse as JSON
+        try:
+            result = json.loads(content)
+            if "command" in result:
+                return result
+        except json.JSONDecodeError:
+            pass
+        
+        # If not JSON, treat as raw command
+        return {
+            "command": content.strip(),
+            "explanation": "Generated command"
+        }
+    
     def _call_openai(self, prompt: str, context: Dict[str, Any] = None) -> Dict[str, str]:
         """Call OpenAI-compatible API."""
         system_prompt = self._build_system_prompt(context)
@@ -100,20 +123,7 @@ class LLMClient:
                 
                 data = response.json()
                 content = data["choices"][0]["message"]["content"]
-                
-                # Try to parse as JSON
-                try:
-                    result = json.loads(content)
-                    if "command" in result:
-                        return result
-                except json.JSONDecodeError:
-                    pass
-                
-                # If not JSON, treat as raw command
-                return {
-                    "command": content.strip(),
-                    "explanation": "Generated command"
-                }
+                return self._parse_llm_response(content)
                 
         except httpx.HTTPError as e:
             raise RuntimeError(f"API request failed: {e}")
@@ -148,20 +158,7 @@ class LLMClient:
                 
                 data = response.json()
                 content = data["content"][0]["text"]
-                
-                # Try to parse as JSON
-                try:
-                    result = json.loads(content)
-                    if "command" in result:
-                        return result
-                except json.JSONDecodeError:
-                    pass
-                
-                # If not JSON, treat as raw command
-                return {
-                    "command": content.strip(),
-                    "explanation": "Generated command"
-                }
+                return self._parse_llm_response(content)
                 
         except httpx.HTTPError as e:
             raise RuntimeError(f"API request failed: {e}")
@@ -189,20 +186,7 @@ class LLMClient:
                 
                 data = response.json()
                 content = data.get("response", "")
-                
-                # Try to parse as JSON
-                try:
-                    result = json.loads(content)
-                    if "command" in result:
-                        return result
-                except json.JSONDecodeError:
-                    pass
-                
-                # If not JSON, treat as raw command
-                return {
-                    "command": content.strip(),
-                    "explanation": "Generated command"
-                }
+                return self._parse_llm_response(content)
                 
         except httpx.HTTPError as e:
             raise RuntimeError(f"API request failed: {e}")
