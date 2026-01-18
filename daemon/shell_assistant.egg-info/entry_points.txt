@@ -1,2 +1,0 @@
-[console_scripts]
-shell-assistant-daemon = shell_assistant.cli:main

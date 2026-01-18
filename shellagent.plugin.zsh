@@ -51,6 +51,7 @@ EOF
     local command=$(echo "$response" | jq -r '.command' 2>/dev/null)
     local explanation=$(echo "$response" | jq -r '.explanation' 2>/dev/null)
     local warning=$(echo "$response" | jq -r '.warning' 2>/dev/null)
+    local severity=$(echo "$response" | jq -r '.severity' 2>/dev/null)
     
     if [[ -z "$command" || "$command" == "null" ]]; then
         echo "❌ Failed to generate command" >&2
@@ -61,7 +62,15 @@ EOF
     # Display results
     echo ""
     echo -e "\033[1;33m📝 Generated Command:\033[0m"
-    echo -e "\033[0;32m$command\033[0m"
+    
+    # Color code based on severity
+    if [[ "$severity" == "dangerous" ]]; then
+        echo -e "\033[1;31m$command\033[0m"  # Bright red for dangerous
+    elif [[ "$severity" == "warning" ]]; then
+        echo -e "\033[0;33m$command\033[0m"  # Yellow for warning
+    else
+        echo -e "\033[0;32m$command\033[0m"  # Green for safe
+    fi
     
     if [[ -n "$explanation" && "$explanation" != "null" ]]; then
         echo ""
@@ -71,8 +80,7 @@ EOF
     
     if [[ -n "$warning" && "$warning" != "null" ]]; then
         echo ""
-        echo -e "\033[1;31m⚠️  Warning:\033[0m"
-        echo "   $warning"
+        echo -e "\033[1;31m$warning\033[0m"
     fi
     
     echo ""
@@ -82,10 +90,19 @@ EOF
     
     case $action in
         e|E)
-            if [[ -n "$warning" && "$warning" != "null" ]]; then
-                echo -n "⚠️  This command may be dangerous. Type 'yes' to confirm: "
+            if [[ "$severity" == "dangerous" ]]; then
+                echo -e "\033[1;31m⚠️  DANGER: This command is potentially destructive!\033[0m"
+                echo -n "Type 'yes' to confirm execution: "
                 read confirm
                 if [[ "$confirm" != "yes" ]]; then
+                    echo "Cancelled"
+                    return 0
+                fi
+            elif [[ -n "$warning" && "$warning" != "null" ]]; then
+                echo -n "⚠️  Confirm execution (y/n): "
+                read -k 1 confirm
+                echo ""
+                if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
                     echo "Cancelled"
                     return 0
                 fi

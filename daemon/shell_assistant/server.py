@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 from typing import Dict, Any
 
 from .llm_client import LLMClient
+from .safety import SafetyChecker
 
 
 logger = logging.getLogger(__name__)
@@ -15,8 +16,9 @@ logger = logging.getLogger(__name__)
 class ShellAssistantHandler(BaseHTTPRequestHandler):
     """HTTP request handler for shell assistant endpoints."""
     
-    # Class variable to hold LLM client (set by server)
+    # Class variables to hold LLM client and safety checker (set by server)
     llm_client: LLMClient = None
+    safety_checker: SafetyChecker = None
     
     def log_message(self, format, *args):
         """Override to use logging instead of printing."""
@@ -107,6 +109,15 @@ class ShellAssistantHandler(BaseHTTPRequestHandler):
             # Generate command
             try:
                 result = self.llm_client.get_command(prompt, context if context else None)
+                
+                # Check command safety
+                if "command" in result:
+                    severity, descriptions = self.safety_checker.check_command(result["command"])
+                    if severity != "safe":
+                        warning_msg = self.safety_checker.get_warning_message(severity, descriptions)
+                        result["warning"] = warning_msg
+                        result["severity"] = severity
+                
                 self._send_json_response(200, result)
             except Exception as e:
                 logger.error(f"Error generating command: {e}")
@@ -132,9 +143,11 @@ class ShellAssistantServer:
         self.host = host
         self.port = port
         self.llm_client = LLMClient(config)
+        self.safety_checker = SafetyChecker()
         
-        # Set class variable so handler can access it
+        # Set class variables so handler can access them
         ShellAssistantHandler.llm_client = self.llm_client
+        ShellAssistantHandler.safety_checker = self.safety_checker
         
         self.httpd = HTTPServer((self.host, self.port), ShellAssistantHandler)
     
