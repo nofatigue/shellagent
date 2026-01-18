@@ -2,14 +2,7 @@
 
 A zsh plugin and daemon service that transforms natural language descriptions into executable shell commands using an LLM (OpenAI, Claude, Ollama, etc.).
 
-## Architecture
-
-ShellAgent can run in two modes:
-
-1. **Daemon Mode (Recommended)** - A Python daemon service maintains persistent connections to LLM providers for faster response times and better context awareness
-2. **Direct Mode** - Standalone shell script that calls the LLM API directly (simpler but slower)
-
-The ZSH plugin automatically detects and uses the daemon if available, falling back to direct mode otherwise.
+**🎯 Type what you want, get the command, execute it—that simple.**
 
 ## Features
 
@@ -18,243 +11,244 @@ The ZSH plugin automatically detects and uses the daemon if available, falling b
 - 🎯 **Multiple LLM providers** - OpenAI, Claude, Ollama, and more
 - ⚡ **Fast daemon mode** - Persistent connections for quick responses
 - 🧠 **Context awareness** - Includes current directory, shell type, and OS in prompts
-- 🎨 **Colored output** - Clear visual feedback
+- 🎨 **Colored output** - Clear visual feedback with severity levels
 - 📋 **Interactive execution** - Execute, copy, or cancel commands easily
+- 🔧 **System service** - Auto-start daemon with systemd/launchd
 
 ## Quick Start
 
-### Option 1: Daemon Mode (Recommended)
+### 5-Minute Setup
 
-1. **Install the daemon:**
 ```bash
-cd daemon
+# 1. Clone and install
+git clone https://github.com/nofatigue/shellagent
+cd shellagent/daemon
 pip install -e .
-```
 
-2. **Configure your API key:**
-```bash
-export SHELLAGENT_API_KEY="sk-..."
-export SHELLAGENT_PROVIDER="openai"  # or "claude", "ollama"
-export SHELLAGENT_MODEL="gpt-4o-mini"
-```
+# 2. Configure (add to ~/.zshrc)
+export SHELLAGENT_API_KEY="sk-..."      # Your OpenAI/Claude API key
+export SHELLAGENT_PROVIDER="openai"     # or "claude", "ollama"
+export SHELLAGENT_DIR="$HOME/shellagent"
+source "$SHELLAGENT_DIR/shellagent.plugin.zsh"
 
-3. **Start the daemon:**
-```bash
+# 3. Start daemon
 shell-assistant-daemon start
-```
 
-4. **Add to your `~/.zshrc`:**
-```bash
-export SHELLAGENT_DIR="/path/to/shellagent"
-source "$SHELLAGENT_DIR/shellagent.plugin.zsh"
-```
-
-5. **Reload and test:**
-```bash
+# 4. Try it!
 exec zsh
 sa "list files sorted by size"
 ```
 
-### Option 2: Direct Mode (Simple)
+📖 **For detailed installation:** See [INSTALLATION.md](INSTALLATION.md)
 
-1. **Add to your `~/.zshrc`:**
+## Usage Examples
+
 ```bash
-export SHELLAGENT_DIR="/path/to/shellagent"
-export SHELLAGENT_API_KEY="sk-..."
-export SHELLAGENT_PROVIDER="openai"
-export SHELLAGENT_MODEL="gpt-4o-mini"
-export SHELLAGENT_MODE="direct"  # Force direct mode
-source "$SHELLAGENT_DIR/shellagent.plugin.zsh"
+# Interactive mode (type without quotes)
+sa
+🤖 ShellAgent> find large files
+
+# Or with quotes
+sa "compress all log files older than 30 days"
+
+# Daemon will show:
+📝 Generated Command:
+   find . -name "*.log" -mtime +30 -exec gzip {} \;
+   
+💡 Explanation:
+   Finds log files older than 30 days and compresses them with gzip
+   
+Action? [E]xecute / [C]opy / [Q]uit: e
 ```
 
-2. **Make script executable:**
+### More Examples
+
 ```bash
-chmod +x "$SHELLAGENT_DIR/shellagent.sh"
+sa "show me the 10 largest files in this directory"
+sa "create a Python virtual environment and install requests"
+sa "find all TODO comments in Python files"
+sa "git commit all changes with message 'update docs'"
+sa "start a simple HTTP server on port 8000"
 ```
 
-3. **Reload and test:**
-```bash
-exec zsh
-sa "list files sorted by size"
-```
+## Architecture
+
+ShellAgent runs in two modes:
+
+1. **Daemon Mode (Recommended)** - Python daemon maintains persistent LLM connections
+   - Faster response times
+   - Better context awareness
+   - Safety checks for dangerous commands
+   - System service integration
+
+2. **Direct Mode** - Simple script calls LLM directly
+   - No daemon required
+   - Simpler setup
+   - Good for testing
+
+The ZSH plugin auto-detects the daemon and falls back to direct mode if unavailable.
 
 ## Installation
 
-### 1. Clone the repository
-```bash
-git clone https://github.com/yourusername/shellagent
-cd shellagent
-```
-
-### 2. Install daemon (optional but recommended)
-```bash
-cd daemon
-pip install -e .
-```
-
-### 3. Add to your zsh configuration
-
-Add this to your `~/.zshrc`:
-
-```bash
-export SHELLAGENT_DIR="/path/to/shellagent"
-source "$SHELLAGENT_DIR/shellagent.plugin.zsh"
-
-# For oh-my-zsh users, alternatively:
-# Clone into oh-my-zsh plugins directory:
-# git clone https://github.com/yourusername/shellagent ~/.oh-my-zsh/custom/plugins/shellagent
-# Then add 'shellagent' to the plugins array in ~/.zshrc
-# plugins=(... shellagent)
-```
-
-### 2. Configure your LLM provider
-
-#### OpenAI (Default)
-```bash
-export SHELLAGENT_API_KEY="sk-..."
-export SHELLAGENT_PROVIDER="openai"
-export SHELLAGENT_MODEL="gpt-4o-mini"
-```
-
-#### Claude (Anthropic)
-```bash
-export SHELLAGENT_API_KEY="sk-ant-..."
-export SHELLAGENT_PROVIDER="claude"
-export SHELLAGENT_MODEL="claude-3-haiku-20240307"
-```
-
-#### Ollama (Local)
-```bash
-export SHELLAGENT_PROVIDER="ollama"
-export SHELLAGENT_MODEL="llama2"  # or your preferred model
-export SHELLAGENT_OLLAMA_HOST="http://localhost:11434"
-# No API key needed for Ollama!
-```
-
-### 3. Start the daemon (if using daemon mode)
-
-```bash
-# Start in foreground
-shell-assistant-daemon start
-
-# Or start in background
-shell-assistant-daemon start &
-
-# Check status
-shell-assistant-daemon status
-
-# Test it
-shell-assistant-daemon test "show disk usage"
-```
-
-## Usage Modes
-
-ShellAgent supports multiple usage modes:
-
-### Mode Configuration
-
-Set `SHELLAGENT_MODE` to control behavior:
-- `auto` (default) - Use daemon if available, fallback to direct mode
-- `daemon` - Always use daemon (fails if daemon not running)
-- `direct` - Always use direct script (no daemon)
-
-```bash
-export SHELLAGENT_MODE="auto"  # or "daemon" or "direct"
-```
-
-## Usage
-
-### Basic Usage
-```bash
-# Simple command generation (with quotes)
-shellagent "install python3 and pip"
-
-# Shorter alias (with quotes)
-sa "create a backup of my home directory"
-
-# Interactive prompt mode (NO quotes needed!)
-sa
-# You'll see: 🤖 ShellAgent> 
-# Then type: install python3 and pip
-
-# Or use shellagent
-shellagent
-# Then type your request without quotes
-
-# Alternative interactive mode
-sa!
-```
-
-### Interactive Actions
-
-After a command is generated, you'll see:
-```
-📝 Generated Command:
-   du -sh * | sort -h
-
-💡 Explanation:
-   Shows disk usage of all items, sorted by size
-
-Action? [E]xecute / [C]opy / [Q]uit:
-```
-
-- Press **E** to execute the command immediately
-- Press **C** to copy to clipboard (requires pbcopy, xclip, or xsel)
-- Press **Q** or any other key to cancel
-
-If a command is potentially dangerous, you'll see a warning and need to confirm with "yes".
-
-### Examples
-
-```bash
-# Install and setup
-sa "install nodejs and initialize a new npm project"
-
-# System administration
-sa "check disk usage and list largest directories"
-
-# Development
-sa "create a Python virtual environment and install requests"
-
-# File operations
-sa "find all .log files modified in the last 7 days and compress them"
-
-# Application deployment
-sa "pull latest changes, install dependencies, run tests, and restart the service"
-```
+See [INSTALLATION.md](INSTALLATION.md) for detailed installation instructions including:
+- Step-by-step setup for daemon mode
+- Direct mode (no daemon) setup
+- Provider-specific configuration (OpenAI, Claude, Ollama)
+- oh-my-zsh integration
+- Troubleshooting guide
 
 ## Configuration
 
+### Quick Configuration
+
+Add to `~/.zshrc`:
+
 ### Environment Variables
 
-Core settings:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `SHELLAGENT_API_KEY` | (required) | Your LLM API key |
-| `SHELLAGENT_PROVIDER` | `openai` | LLM provider: `openai`, `claude`, `ollama` |
-| `SHELLAGENT_MODEL` | `gpt-4o-mini` | Model name to use |
+| `SHELLAGENT_PROVIDER` | `openai` | Provider: `openai`, `claude`, `ollama` |
+| `SHELLAGENT_MODEL` | `gpt-4o-mini` | Model name |
 | `SHELLAGENT_MODE` | `auto` | Mode: `auto`, `daemon`, `direct` |
-
-Daemon settings:
-| Variable | Default | Description |
-|----------|---------|-------------|
 | `SHELLAGENT_DAEMON_HOST` | `localhost` | Daemon host |
 | `SHELLAGENT_DAEMON_PORT` | `5738` | Daemon port |
 
-Provider-specific:
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SHELLAGENT_API_BASE` | OpenAI default | Custom API endpoint |
-| `SHELLAGENT_OLLAMA_HOST` | `http://localhost:11434` | Ollama server address |
-| `SHELLAGENT_DEBUG` | `0` | Set to `1` for debug output |
-
-### Configuration File (Daemon Mode)
+### Configuration File (Daemon)
 
 Create `~/.config/shell-assistant/config.yaml`:
 
 ```yaml
 openrouter:
   api_key: ${SHELLAGENT_API_KEY}
+  model: "gpt-4o-mini"
+  provider: "openai"
+
+daemon:
+  host: "localhost"
+  port: 5738
+```
+
+See `config/config.example.yaml` for all options.
+
+## Usage
+
+## Usage
+
+### Interactive Mode
+
+```bash
+sa
+🤖 ShellAgent> find large files
+
+# Shows:
+📝 Generated Command:
+   find . -type f -size +100M
+   
+💡 Explanation:
+   Finds files larger than 100MB in current directory
+   
+Action? [E]xecute / [C]opy / [Q]uit:
+```
+
+### Direct Mode
+
+```bash
+sa "compress all log files"
+shellagent "create Python virtual environment"
+```
+
+### Actions
+
+After command generation:
+- **E** - Execute immediately
+- **C** - Copy to clipboard
+- **Q** - Cancel
+
+Dangerous commands require typing "yes" to confirm.
+
+## Daemon Management
+
+### Starting
+
+```bash
+# Foreground
+shell-assistant-daemon start
+
+# Background
+nohup shell-assistant-daemon start > ~/.shell-assistant/daemon.log 2>&1 &
+
+# As system service
+sudo shell-assistant-daemon install-service  # Linux
+shell-assistant-daemon install-service       # macOS
+```
+
+### Status & Testing
+
+```bash
+shell-assistant-daemon status
+shell-assistant-daemon test "list files"
+```
+
+See [daemon/README.md](daemon/README.md) for more details.
+
+## Safety Features
+
+- **Command review** - All commands reviewed before execution
+- **Danger detection** - 3 severity levels (safe/warning/dangerous)
+- **Color coding** - Visual indicators for risk level
+- **Confirmation prompts** - Required for destructive operations
+- **Context awareness** - Commands aware of current directory and environment
+
+## Testing
+
+```bash
+# Start daemon
+shell-assistant-daemon start
+
+# Run test suite
+cd daemon/tests
+./run_all_tests.sh
+```
+
+## Documentation
+
+- [INSTALLATION.md](INSTALLATION.md) - Detailed installation guide
+- [daemon/README.md](daemon/README.md) - Daemon service details
+- [PLAN.md](PLAN.md) - Architecture design
+- [STEPS.md](STEPS.md) - Implementation steps
+
+## Troubleshooting
+
+### Daemon not connecting
+```bash
+shell-assistant-daemon status  # Check if running
+shell-assistant-daemon start   # Start it
+export SHELLAGENT_MODE="direct"  # Or use direct mode
+```
+
+### API errors
+```bash
+echo $SHELLAGENT_API_KEY  # Verify key is set
+export SHELLAGENT_DEBUG=1  # Enable debug mode
+```
+
+See [INSTALLATION.md](INSTALLATION.md) for complete troubleshooting guide.
+
+## Project Structure
+
+```
+shellagent/
+├── daemon/                  # Python daemon service
+│   ├── shell_assistant/     # Core daemon code
+│   └── tests/              # Test suite
+├── config/                 # Configuration examples
+├── shellagent.sh          # Direct mode script
+├── shellagent.plugin.zsh  # ZSH plugin
+├── INSTALLATION.md        # Installation guide
+├── PLAN.md               # Architecture design
+└── STEPS.md              # Implementation steps
+```
   model: "gpt-4o-mini"
   base_url: "https://api.openai.com/v1"
   provider: "openai"
