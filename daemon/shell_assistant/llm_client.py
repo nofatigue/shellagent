@@ -2,6 +2,7 @@
 
 import httpx
 import json
+import re
 from typing import Dict, Any
 
 
@@ -77,13 +78,23 @@ class LLMClient:
         Returns:
             Dict with 'command' and 'explanation' keys
         """
-        # Try to parse as JSON
+        # Try to parse as JSON directly
         try:
             result = json.loads(content)
             if "command" in result:
                 return result
         except json.JSONDecodeError:
             pass
+        
+        # Try to extract JSON from markdown code blocks
+        json_match = re.search(r'```(?:json)?\s*\n(.*?)\n```', content, re.DOTALL)
+        if json_match:
+            try:
+                result = json.loads(json_match.group(1))
+                if "command" in result:
+                    return result
+            except json.JSONDecodeError:
+                pass
         
         # If not JSON, treat as raw command
         return {
